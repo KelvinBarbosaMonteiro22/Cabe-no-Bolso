@@ -1,5 +1,7 @@
-package Model;
 
+package testes;
+
+import Model.Participante;
 import java.math.BigDecimal;
 
 public class TesteParticipante {
@@ -15,6 +17,5 @@ public class TesteParticipante {
         System.out.println("Código: " + ana.getCodigo());
         System.out.println("Nome: " + ana.getNome());
         System.out.println("Orçamento: " + ana.getOrcamento());
-
     }
 }

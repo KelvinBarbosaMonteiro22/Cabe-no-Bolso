@@ -1,38 +1,35 @@
+
 package Model;
 
 import java.math.BigDecimal;
+import java.io.Serializable;
 
-public class Participante {
+public class Participante implements Serializable {
 
+    private static final long serialVersionUID = 1L;
 
     private int codigo;
+    private String nome;
+    private BigDecimal orcamento;
 
-    private String nome; 
-
-    private BigDecimal orcamento; 
-
-     public Participante(int codigo, String nome, BigDecimal orcamento) {
-
+    public Participante(int codigo, String nome, BigDecimal orcamento) {
 
         if (codigo <= 0) {
-        throw new IllegalArgumentException("Código inválido!");
-    }
+            throw new IllegalArgumentException("Código inválido!");
+        }
 
-    if (nome == null || nome.trim().isEmpty()) {
-        throw new IllegalArgumentException("Nome não pode ficar vazio!");
-    }
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome não pode ficar vazio!");
+        }
 
-    if (orcamento == null || orcamento.compareTo(BigDecimal.ZERO) < 0) {
-        throw new IllegalArgumentException("Orçamento inválido!");
-    }
-
+        if (orcamento == null || orcamento.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Orçamento inválido!");
+        }
 
         this.codigo = codigo;
         this.nome = nome;
         this.orcamento = orcamento;
-
-    
-}
+    }
 
     public int getCodigo() {
         return codigo;
@@ -48,15 +45,12 @@ public class Participante {
 
     public void setNome(String nome) {
 
-
         if (nome == null || nome.trim().isEmpty()) {
-        throw new IllegalArgumentException("Nome inválido!");
+            throw new IllegalArgumentException("Nome inválido!");
         }
 
         this.nome = nome;
-
     }
-
 
     public void setOrcamento(BigDecimal orcamento) {
 
@@ -65,7 +59,5 @@ public class Participante {
         }
 
         this.orcamento = orcamento;
-
     }
-
 }

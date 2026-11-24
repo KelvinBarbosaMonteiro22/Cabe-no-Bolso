@@ -1,1 +1,17 @@
+# Arquivos Java compilados
 *.class
+
+# Arquivos de dados locais
+*.dat
+
+# Arquivos de backup
+*.bak
+
+# Pastas de compilação
+bin/
+build/
+out/
+target/
+
+# Arquivos temporários
+*.log

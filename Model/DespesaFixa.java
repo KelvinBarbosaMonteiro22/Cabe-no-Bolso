@@ -1,12 +1,17 @@
+
 package Model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DespesaFixa extends Despesa {
+
+    private static final long serialVersionUID = 1L;
 
     public DespesaFixa(String descricao, BigDecimal valor) {
         super(descricao, valor);
@@ -20,6 +25,19 @@ public class DespesaFixa extends Despesa {
 
         if (participantes == null || participantes.isEmpty()) {
             throw new IllegalArgumentException("Selecione participantes!");
+        }
+
+        Set<Integer> codigos = new HashSet<>();
+
+        for (Participante participante : participantes) {
+
+            if (participante == null) {
+                throw new IllegalArgumentException("Participante inválido!");
+            }
+
+            if (!codigos.add(participante.getCodigo())) {
+                throw new IllegalArgumentException("Participante repetido!");
+            }
         }
 
         List<Participante> ordenados = new ArrayList<>(participantes);
