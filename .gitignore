@@ -1,17 +1,22 @@
-# Arquivos Java compilados
+
+# Arquivos compilados do Java
 *.class
 
-# Arquivos de dados locais
+# Dados e arquivos de backup
 *.dat
-
-# Arquivos de backup
 *.bak
+*.backup
+dados/
 
-# Pastas de compilação
+# Pastas de compilacao
 bin/
 build/
 out/
 target/
 
-# Arquivos temporários
+# Arquivos de log
 *.log
+
+# Arquivos do Windows
+desktop.ini
+Thumbs.db

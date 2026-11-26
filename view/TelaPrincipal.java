@@ -16,6 +16,8 @@ public class TelaPrincipal extends JFrame {
     private Planejamento planejamento;
     private PersistenciaArquivo persistencia;
 
+    private boolean carregamentoComErro = false;
+
     public TelaPrincipal() {
 
         persistencia = new PersistenciaArquivo("dados/cabenoBolso.dat");
@@ -67,13 +69,21 @@ public class TelaPrincipal extends JFrame {
             tela.setVisible(true);
         });
 
-        // Abre a tela de resumo
         botaoResumo.addActionListener(e -> {
 
-            TelaResumo telaResumo = new TelaResumo(planejamento);
+            TelaResumo telaResumo =
+                new TelaResumo(planejamento);
 
             telaResumo.setVisible(true);
         });
+
+        // Bloqueia o acesso em caso de erro no carregamento
+        if (carregamentoComErro) {
+
+            botaoParticipantes.setEnabled(false);
+            botaoDespesas.setEnabled(false);
+            botaoResumo.setEnabled(false);
+        }
 
         painel.add(titulo);
         painel.add(botaoParticipantes);
@@ -81,34 +91,57 @@ public class TelaPrincipal extends JFrame {
         painel.add(botaoResumo);
 
         add(painel);
-
     }
 
     private void carregarDados() {
 
         File arquivo = new File("dados/cabenoBolso.dat");
 
-        if (arquivo.exists()) {
+        // Verifica se o arquivo existe
+        if (!arquivo.exists()) {
 
-            try {
-
-                planejamento = persistencia.carregar();
-
-                System.out.println("Dados carregados com sucesso!");
-
-            } catch (IOException | ClassNotFoundException erro) {
-
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Erro ao carregar os dados: " + erro.getMessage()
-                );
-
+            if (planejamento == null) {
                 planejamento = new Planejamento();
             }
 
-        } else {
+            JOptionPane.showMessageDialog(
+                this,
+                "Arquivo não encontrado. Iniciando um novo planejamento."
+            );
 
-            planejamento = new Planejamento();
+            return;
+        }
+
+        try {
+
+            // Carrega os dados antes de substituir o planejamento
+            Planejamento dadosCarregados = persistencia.carregar();
+
+            planejamento = dadosCarregados;
+
+            carregamentoComErro = false;
+
+            System.out.println("Dados carregados com sucesso!");
+
+        } catch (IOException | ClassNotFoundException erro) {
+
+            carregamentoComErro = true;
+
+            JOptionPane.showMessageDialog(
+                this,
+                "Erro ao carregar os dados: "
+                + erro.getMessage()
+                + "\n\nO arquivo foi preservado."
+                + "\nAs funcionalidades foram bloqueadas."
+                + "\nVerifique o arquivo antes de reiniciar o sistema.",
+                "Erro de persistência",
+                JOptionPane.ERROR_MESSAGE
+            );
+
+            // Preserva o planejamento existente
+            if (planejamento == null) {
+                planejamento = new Planejamento();
+            }
         }
     }
 

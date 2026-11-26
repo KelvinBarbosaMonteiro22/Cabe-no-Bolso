@@ -44,9 +44,11 @@ public class PersistenciaArquivo implements Persistencia {
             pasta.mkdirs();
         }
 
-        try (ObjectOutputStream saida =
-                new ObjectOutputStream(
-                    new FileOutputStream(arquivo))) {
+        try (FileOutputStream arquivoSaida =
+                new FileOutputStream(arquivo);
+
+             ObjectOutputStream saida =
+                new ObjectOutputStream(arquivoSaida)) {
 
             saida.writeObject(planejamento);
         }
@@ -64,9 +66,11 @@ public class PersistenciaArquivo implements Persistencia {
             );
         }
 
-        try (ObjectInputStream entrada =
-                new ObjectInputStream(
-                    new FileInputStream(arquivo))) {
+        try (FileInputStream arquivoEntrada =
+                new FileInputStream(arquivo);
+
+             ObjectInputStream entrada =
+                new ObjectInputStream(arquivoEntrada)) {
 
             Object objeto = entrada.readObject();
 
