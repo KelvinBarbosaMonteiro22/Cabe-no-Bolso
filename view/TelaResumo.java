@@ -1,4 +1,3 @@
-
 package view;
 
 import Model.Participante;
@@ -21,7 +20,7 @@ public class TelaResumo extends JFrame {
         this.planejamento = planejamento;
 
         setTitle("Resumo das Despesas - Cabe no Bolso");
-        setSize(700, 400);
+        setSize(900, 450);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -33,6 +32,7 @@ public class TelaResumo extends JFrame {
                 "Participante",
                 "Orçamento",
                 "Total de despesas",
+                "Valor excedido",
                 "Situação"
             }, 0
         ) {
@@ -81,10 +81,10 @@ public class TelaResumo extends JFrame {
             BigDecimal orcamento = participante.getOrcamento();
 
             BigDecimal despesas =
-            planejamento.calcularTotalParticipante(participante.getCodigo());
+                planejamento.calcularTotalParticipante(participante.getCodigo());
 
             BigDecimal excedente =
-            planejamento.calcularExcedente(participante.getCodigo());
+                planejamento.calcularExcedente(participante.getCodigo());
 
             String situacao;
 
@@ -99,6 +99,7 @@ public class TelaResumo extends JFrame {
                 participante.getNome(),
                 "R$ " + orcamento.toPlainString(),
                 "R$ " + despesas.toPlainString(),
+                "R$ " + excedente.toPlainString(),
                 situacao
             });
         }
