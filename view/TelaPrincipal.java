@@ -1,4 +1,3 @@
-
 package view;
 
 import Model.Planejamento;
@@ -10,6 +9,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 
 public class TelaPrincipal extends JFrame {
 
@@ -18,9 +20,12 @@ public class TelaPrincipal extends JFrame {
 
     private boolean carregamentoComErro = false;
 
+    private static final String CAMINHO_ARQUIVO =
+        "dados/cabenoBolso.dat";
+
     public TelaPrincipal() {
 
-        persistencia = new PersistenciaArquivo("dados/cabenoBolso.dat");
+        persistencia = new PersistenciaArquivo(CAMINHO_ARQUIVO);
 
         carregarDados();
 
@@ -77,7 +82,8 @@ public class TelaPrincipal extends JFrame {
             telaResumo.setVisible(true);
         });
 
-        // Bloqueia o acesso em caso de erro no carregamento
+        // Bloqueia os botões somente se não for possível
+        // preservar o arquivo inválido com segurança.
         if (carregamentoComErro) {
 
             botaoParticipantes.setEnabled(false);
@@ -95,9 +101,8 @@ public class TelaPrincipal extends JFrame {
 
     private void carregarDados() {
 
-        File arquivo = new File("dados/cabenoBolso.dat");
+        File arquivo = new File(CAMINHO_ARQUIVO);
 
-        // Verifica se o arquivo existe
         if (!arquivo.exists()) {
 
             if (planejamento == null) {
@@ -106,7 +111,8 @@ public class TelaPrincipal extends JFrame {
 
             JOptionPane.showMessageDialog(
                 this,
-                "Arquivo não encontrado. Iniciando um novo planejamento."
+                "Arquivo não encontrado.\n"
+                + "Iniciando um novo planejamento."
             );
 
             return;
@@ -114,33 +120,77 @@ public class TelaPrincipal extends JFrame {
 
         try {
 
-            // Carrega os dados antes de substituir o planejamento
-            Planejamento dadosCarregados = persistencia.carregar();
+            Planejamento dadosCarregados =
+                persistencia.carregar();
 
             planejamento = dadosCarregados;
 
             carregamentoComErro = false;
 
-            System.out.println("Dados carregados com sucesso!");
+            System.out.println(
+                "Dados carregados com sucesso!"
+            );
 
         } catch (IOException | ClassNotFoundException erro) {
 
-            carregamentoComErro = true;
+            // Preserva um planejamento que já esteja em memória.
+            if (planejamento != null) {
 
-            JOptionPane.showMessageDialog(
-                this,
-                "Erro ao carregar os dados: "
-                + erro.getMessage()
-                + "\n\nO arquivo foi preservado."
-                + "\nAs funcionalidades foram bloqueadas."
-                + "\nVerifique o arquivo antes de reiniciar o sistema.",
-                "Erro de persistência",
-                JOptionPane.ERROR_MESSAGE
-            );
+                carregamentoComErro = true;
 
-            // Preserva o planejamento existente
-            if (planejamento == null) {
-                planejamento = new Planejamento();
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Erro ao carregar os dados.\n"
+                    + "O planejamento existente foi preservado.\n"
+                    + "As funcionalidades foram bloqueadas.",
+                    "Erro de persistência",
+                    JOptionPane.ERROR_MESSAGE
+                );
+
+                return;
+            }
+
+            planejamento = new Planejamento();
+
+            try {
+
+                Path origem = arquivo.toPath();
+
+                Path backup = origem.resolveSibling(
+                    "cabenoBolso-invalido-"
+                    + UUID.randomUUID()
+                    + ".bak"
+                );
+
+                // Preserva o arquivo inválido.
+                Files.move(origem, backup);
+
+                carregamentoComErro = false;
+
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Erro ao carregar os dados: "
+                    + erro.getMessage()
+                    + "\n\nArquivo inválido preservado em:\n"
+                    + backup
+                    + "\n\nIniciando um novo planejamento.",
+                    "Aviso de persistência",
+                    JOptionPane.WARNING_MESSAGE
+                );
+
+            } catch (IOException erroBackup) {
+
+                carregamentoComErro = true;
+
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Não foi possível preservar o arquivo inválido."
+                    + "\n" + erroBackup.getMessage()
+                    + "\nAs funcionalidades foram bloqueadas"
+                    + " para proteger os dados.",
+                    "Erro de persistência",
+                    JOptionPane.ERROR_MESSAGE
+                );
             }
         }
     }

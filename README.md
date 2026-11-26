@@ -1,4 +1,3 @@
-
 # Cabe no Bolso — Planejador de Despesas Compartilhadas
 
 ## 1. Sobre o projeto
@@ -25,7 +24,8 @@ Facilitar o planejamento financeiro de atividades em grupo, permitindo distribui
 - Salvamento e recuperação dos dados.
 - Validação de entradas inválidas.
 - Bloqueio da exclusão de participantes vinculados a despesas.
-- Proteção contra sobrescrita pela interface em caso de falha no carregamento.
+- Preservação do arquivo inválido em backup e início de um novo planejamento.
+- Bloqueio das operações quando não é possível preservar o arquivo com segurança.
 
 ## 4. Tecnologias utilizadas
 
@@ -92,6 +92,8 @@ Cabe-no-Bolso/
 │   ├── TesteCarregar.java
 │   └── TesteArquivoInvalido.java
 ├── dados/ (gerada localmente)
+├── evidencias/ (30 imagens)
+├── TESTES.md
 ├── Cabe_no_Bolso_UML.pdf
 ├── .gitignore
 └── README.md
@@ -299,6 +301,8 @@ Os dados são recuperados quando a aplicação é iniciada novamente.
 
 Os arquivos de dados, backups e arquivos compilados são ignorados pelo Git.
 
+Na inicialização, se o carregamento falhar e não houver planejamento em memória, a TelaPrincipal tenta mover o arquivo original para `dados/cabenoBolso-invalido-<UUID>.bak`. Se a operação for bem-sucedida, inicia um planejamento vazio e mantém o caminho `dados/cabenoBolso.dat` para os novos salvamentos. O backup preserva o conteúdo original, mas não é restaurado automaticamente. Se a movimentação falhar, os botões são bloqueados.
+
 ## 15. Tratamento de erros
 
 O sistema possui validações para:
@@ -313,7 +317,7 @@ O sistema possui validações para:
 - Arquivo inexistente.
 - Arquivo inválido.
 
-Quando um arquivo inválido é encontrado durante a inicialização, o sistema apresenta uma mensagem de erro e desabilita os botões da tela principal, evitando alterações pela interface.
+Quando um arquivo inválido é encontrado durante a inicialização, o sistema apresenta um aviso, tenta preservar o arquivo em backup e permite iniciar um planejamento vazio se a operação for bem-sucedida. Caso não consiga preservar o arquivo, bloqueia os botões para evitar sobrescrita. O código também prevê manter um planejamento já existente em memória em caso de falha, mas esse fluxo não foi testado diretamente.
 
 ## 16. Execução dos testes
 
@@ -384,7 +388,7 @@ Utilize o caso de referência para realizar os testes manuais.
 | Exclusão de despesa | Excluir atividade recreativa | R$ 60,00 por pessoa e total de R$ 180,00 |
 | Salvar e reiniciar | Fechar e abrir o sistema | Recuperar dados sem duplicação |
 | Arquivo ausente | Executar sem arquivo de dados | Mensagem e novo planejamento |
-| Arquivo inválido | Executar com arquivo de teste inválido | Mensagem de erro e bloqueio dos botões |
+| Arquivo inválido | Executar com arquivo de teste inválido | Aviso, backup preservado e novo planejamento; bloqueio se a movimentação falhar |
 
 Restaure o caso de referência entre os testes que modificam os dados.
 
@@ -397,7 +401,9 @@ Realize os testes de arquivo ausente e inválido em uma pasta isolada, sem modif
 - Recuperação dos dados após reiniciar.
 - Detecção de arquivo ausente.
 - Detecção e liberação de arquivo inválido.
-- Bloqueio dos botões após falha de carregamento.
+- Na versão anterior, bloqueio dos botões após falha de carregamento (evidências 11 e 12).
+- Na versão atual, início de planejamento vazio após preservar o arquivo inválido, cadastro de Lucas e recuperação após reiniciar (evidências 14 a 19).
+- Cenário próprio com quatro participantes: total de R$ 350,00 antes e após reiniciar.
 - Preservação do conteúdo do arquivo inválido utilizado no teste isolado.
 
 ## 18. Problemas identificados e corrigidos
@@ -408,7 +414,7 @@ A correção consistiu em declarar FileInputStream e ObjectInputStream separadam
 
 Após a recompilação, o teste confirmou que o arquivo temporário foi liberado corretamente.
 
-Também foi acrescentado um controle de erro na TelaPrincipal para bloquear as funcionalidades quando o carregamento falhar, evitando a sobrescrita do arquivo pela interface.
+Inicialmente, foi acrescentado um controle de erro na TelaPrincipal para bloquear as funcionalidades após falha de carregamento. Na versão atual, o arquivo inválido é movido com Files.move para um nome único gerado por UUID, permitindo iniciar um planejamento vazio sem sobrescrever o conteúdo original. O bloqueio permanece como proteção caso a movimentação falhe. O diagrama UML foi atualizado com a constante CAMINHO_ARQUIVO.
 
 ## 19. Limitações e melhorias futuras
 
@@ -417,7 +423,8 @@ Também foi acrescentado um controle de erro na TelaPrincipal para bloquear as f
 - Melhoria da apresentação visual das telas.
 - Implementação de um simulador de alternativas.
 - Ampliação dos testes automatizados.
-- Implementação de gravação atômica e recuperação por backup.
+- Implementação de gravação atômica e restauração assistida de backups.
+- Teste específico da falha na movimentação do arquivo para backup.
 - Validação de uma falha de carregamento com planejamento já em uso.
 
 ## 20. Objetivo acadêmico
@@ -430,6 +437,79 @@ O projeto busca aplicar os conhecimentos estudados na disciplina de Programaçã
 - Proposta da atividade final Cabe no Bolso, 2026.
 - Documentação oficial do Java: https://docs.oracle.com/en/java/javase/21/
 
-## 22. Repositório
+## 22. Cenário próprio — passeio fictício
+
+Em um planejamento vazio, cadastre:
+
+| Código | Participante | Orçamento |
+|---|---|---:|
+| 1 | Lucas | R$ 100,00 |
+| 2 | Pedro | R$ 80,00 |
+| 3 | Júlia | R$ 120,00 |
+| 4 | Maria | R$ 90,00 |
+
+| Despesa | Tipo | Valor | Participantes |
+|---|---|---:|---|
+| Transporte | Fixa | R$ 120,00 | Todos |
+| Alimentação | Por pessoa | R$ 35,00 | Todos |
+| Cinema | Por pessoa | R$ 25,00 | Lucas e Júlia |
+| Lanche | Fixa | R$ 40,00 | Todos |
+
+| Participante | Transporte | Alimentação | Cinema | Lanche | Total esperado e obtido |
+|---|---:|---:|---:|---:|---:|
+| Lucas | 30,00 | 35,00 | 25,00 | 10,00 | 100,00 |
+| Pedro | 30,00 | 35,00 | 0,00 | 10,00 | 75,00 |
+| Júlia | 30,00 | 35,00 | 25,00 | 10,00 | 100,00 |
+| Maria | 30,00 | 35,00 | 0,00 | 10,00 | 75,00 |
+
+O total esperado e obtido foi R$ 350,00, com orçamento agregado de R$ 390,00 e saldo de R$ 40,00. Todos ficaram dentro do limite, inclusive Lucas, cujo gasto foi igual ao orçamento. Após fechar e abrir novamente o sistema, o resumo manteve os mesmos valores. A conferência individual dos vínculos após reiniciar não foi repetida neste cenário.
+
+## 23. Reprodução da recuperação de arquivo inválido
+
+Com o projeto compilado, execute no PowerShell, a partir da pasta principal:
+
+```powershell
+$projeto = (Get-Location).Path
+$pastaTeste = Join-Path $env:TEMP ("CabeNoBolso-Invalido-" + [guid]::NewGuid().ToString())
+New-Item -ItemType Directory -Path "$pastaTeste\dados"
+Set-Content -Path "$pastaTeste\dados\cabenoBolso.dat" -Value "Arquivo invalido para teste"
+Push-Location $pastaTeste
+try { java -cp "$projeto" view.TelaPrincipal } finally { Pop-Location }
+```
+
+Confirme o aviso, abra o resumo vazio e cadastre Lucas (código 1, orçamento 100.00). Feche a aplicação e, no mesmo terminal, execute:
+
+```powershell
+Get-ChildItem "$pastaTeste\dados" -Name
+Get-Content "$pastaTeste\dados\*.bak"
+```
+
+Devem existir o novo arquivo `.dat` e o backup `.bak`, contendo o texto `Arquivo invalido para teste`. Reinicie na mesma pasta temporária:
+
+```powershell
+Push-Location $pastaTeste
+try { java -cp "$projeto" view.TelaPrincipal } finally { Pop-Location }
+```
+
+Confirme o cadastro de Lucas. Para reproduzir o cenário próprio, complete os cadastros e despesas da seção 22 nessa mesma sessão, confira o resumo e repita a reinicialização. Não execute o teste de arquivo inválido sobre os dados originais.
+
+## 24. Evidências
+
+A pasta [evidencias](evidencias/) contém 30 imagens. As evidências 11 e 12 registram o comportamento anterior à correção, não o comportamento atual.
+
+- [14 — Aviso de recuperação](evidencias/14-recuperacao-arquivo-invalido.png)
+- [15 — Botões habilitados](evidencias/15-botoes-habilitados-apos-erro.png)
+- [16 — Planejamento vazio](evidencias/16-planejamento-vazio-apos-erro.png)
+- [17 — Cadastro após recuperação](evidencias/17-cadastro-apos-recuperacao.png)
+- [18 — Backup preservado](evidencias/18-backup-preservado.png)
+- [19 — Cadastro recuperado](evidencias/19-dados-recuperados-apos-erro.png)
+- [20 — Participantes do cenário próprio](evidencias/20-cenario-proprio-participantes.png)
+- [21 — Despesas do cenário próprio](evidencias/21-cenario-proprio-despesas.png)
+- [22 — Resumo do cenário próprio](evidencias/22-cenario-proprio-resumo.png)
+- [23 — Resumo após reiniciar](evidencias/23-cenario-proprio-persistencia.png)
+
+Consulte também [TESTES.md](TESTES.md) para o registro detalhado dos testes.
+
+## 25. Repositório
 
 https://github.com/KelvinBarbosaMonteiro22/Cabe-no-Bolso
